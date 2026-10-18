@@ -3,7 +3,7 @@ package com.example.image_processing_service.auth.service;
 import com.example.image_processing_service.auth.dto.AuthResponse;
 import com.example.image_processing_service.auth.dto.LoginRequest;
 import com.example.image_processing_service.auth.dto.RegisterRequest;
-import com.example.image_processing_service.auth.security.MyUserDetails;
+import com.example.image_processing_service.auth.model.MyUserDetails;
 import com.example.image_processing_service.user.entity.AppUser;
 import com.example.image_processing_service.user.entity.Role;
 import com.example.image_processing_service.user.exception.UsernameAlreadyExistsException;
