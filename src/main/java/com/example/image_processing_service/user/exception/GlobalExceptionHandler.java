@@ -3,6 +3,8 @@ package com.example.image_processing_service.user.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.jwt.JwtValidationException;
+import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -40,6 +42,16 @@ public class GlobalExceptionHandler {
 
         problemDetail.setTitle("Validation failed");
         problemDetail.setProperty("errors", validationErrors);
+        problemDetail.setProperty(TIMESTAMP, Instant.now());
+
+        return ResponseEntity.of(problemDetail).build();
+    }
+
+    @ExceptionHandler(JwtValidationException.class)
+    public ResponseEntity<ProblemDetail> handleJwtValidationException(JwtValidationException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+
+        problemDetail.setTitle("Provided JWT is invalid.");
         problemDetail.setProperty(TIMESTAMP, Instant.now());
 
         return ResponseEntity.of(problemDetail).build();
