@@ -1,13 +1,10 @@
 package com.example.image_processing_service.image.service;
 
-import com.example.image_processing_service.image.dto.ImageDetailsResponse;
-import com.example.image_processing_service.image.dto.ImageMetadata;
 import com.example.image_processing_service.image.dto.ImageUploadResponse;
 import com.example.image_processing_service.image.exception.ImageDownloadFailedException;
 import com.example.image_processing_service.image.exception.ImageNotFoundException;
 import com.example.image_processing_service.image.exception.ImageUploadFailedException;
 import com.example.image_processing_service.image.exception.InvalidFileException;
-import com.example.image_processing_service.transform.dto.TransformationUploadResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Autowired;
