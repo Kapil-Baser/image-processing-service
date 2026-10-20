@@ -27,7 +27,7 @@ public class ImageController {
     }
 
     @PostMapping( path = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ImageDto> uploadImage(@RequestParam("image") MultipartFile image, @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<ImageDetailsResponse> uploadImage(@RequestParam("image") MultipartFile image, @AuthenticationPrincipal Jwt jwt) {
         var response = imageService.uploadAndSave(jwt, image);
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -35,7 +35,7 @@ public class ImageController {
     }
 
     @GetMapping("/images")
-    public ResponseEntity<List<ImageDto>> getImages(Pageable pageable, @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<List<ImageDetailsResponse>> getImages(Pageable pageable, @AuthenticationPrincipal Jwt jwt) {
         var images = imageService.getImages(jwt, pageable);
         return ResponseEntity.ok(images);
     }
