@@ -1,6 +1,6 @@
 package com.example.image_processing_service.image.service;
 
-import com.example.image_processing_service.image.dto.ImageDto;
+import com.example.image_processing_service.image.dto.ImageDetailsResponse;
 import com.example.image_processing_service.image.dto.ImageUploadResponse;
 import com.example.image_processing_service.image.entity.Image;
 import com.example.image_processing_service.image.exception.ImageNotFoundException;
@@ -22,18 +22,16 @@ public class ImageService {
 
     private final ImageStorageService imageStorageService;
     private final UserService userService;
-    private final ImageMapper imageMapper;
     private final ImageRepository imageRepository;
 
     @Autowired
-    public ImageService(ImageStorageService imageStorageService, UserService userService, ImageMapper imageMapper, ImageRepository imageRepository) {
+    public ImageService(ImageStorageService imageStorageService, UserService userService, ImageRepository imageRepository) {
         this.imageStorageService = imageStorageService;
         this.userService = userService;
-        this.imageMapper = imageMapper;
         this.imageRepository = imageRepository;
     }
 
-    public ImageDto uploadAndSave(Jwt jwt, MultipartFile file) {
+    public ImageDetailsResponse uploadAndSave(Jwt jwt, MultipartFile file) {
         AppUser user = userService.getUserFromJWT(jwt);
 
         UUID imageID = UUID.randomUUID();
@@ -42,11 +40,11 @@ public class ImageService {
 
         ImageUploadResponse uploadResponse = imageStorageService.upload(imageID, user.getUsername(), file);
 
-        Image image = imageMapper.toImage(imageID, user, originalImageName, uploadResponse);
+        Image image = ImageMapper.toImage(imageID, user, originalImageName, uploadResponse);
 
         Image saved = imageRepository.save(image);
 
-        return ImageMapper.toDto(saved);
+        return ImageMapper.toImageDetailsRes(saved);
     }
 
     public Image getImage(UUID imageID) {
@@ -54,14 +52,18 @@ public class ImageService {
                 .orElseThrow(() -> new ImageNotFoundException("Invalid UUID: " + imageID));
     }
 
-    public List<ImageDto> getImages(Jwt jwt, Pageable pageable) {
+    public List<ImageDetailsResponse> getImages(Jwt jwt, Pageable pageable) {
         AppUser user = userService.getUserFromJWT(jwt);
 
         List<Image> images = imageRepository.getAllByUser(user, pageable);
 
         return images.stream()
-                .map(ImageMapper::toDto)
+                .map(ImageMapper::toImageDetailsRes)
                 .toList();
+    }
+
+    public Image save(Image image) {
+        return imageRepository.save(image);
     }
 
 }
