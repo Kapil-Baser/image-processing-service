@@ -35,7 +35,7 @@ public class ImageController {
     }
 
     @GetMapping("/images")
-    public ResponseEntity<List<ImageDetailsResponse>> getImages(Pageable pageable, @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<List<ImageDto>> getImages(Pageable pageable, @AuthenticationPrincipal Jwt jwt) {
         var images = imageService.getImages(jwt, pageable);
         return ResponseEntity.ok(images);
     }
