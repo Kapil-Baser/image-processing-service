@@ -1,5 +1,6 @@
 package com.example.image_processing_service.user.exception;
 
+import com.example.image_processing_service.image.exception.ImageNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -61,6 +62,16 @@ public class GlobalExceptionHandler {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
 
         problemDetail.setTitle("The request payload contains missing or invalid fields");
+        problemDetail.setProperty(TIMESTAMP, Instant.now());
+
+        return ResponseEntity.of(problemDetail).build();
+    }
+
+    @ExceptionHandler(ImageNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleImageNotFoundException(ImageNotFoundException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+
+        problemDetail.setTitle("Image not found");
         problemDetail.setProperty(TIMESTAMP, Instant.now());
 
         return ResponseEntity.of(problemDetail).build();
