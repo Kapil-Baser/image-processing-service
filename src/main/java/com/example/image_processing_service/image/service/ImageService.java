@@ -1,6 +1,7 @@
 package com.example.image_processing_service.image.service;
 
 import com.example.image_processing_service.image.dto.ImageDetailsResponse;
+import com.example.image_processing_service.image.dto.ImageDto;
 import com.example.image_processing_service.image.dto.ImageUploadResponse;
 import com.example.image_processing_service.image.entity.Image;
 import com.example.image_processing_service.image.exception.ImageNotFoundException;
@@ -52,18 +53,22 @@ public class ImageService {
                 .orElseThrow(() -> new ImageNotFoundException("Invalid UUID: " + imageID));
     }
 
-    public List<ImageDetailsResponse> getImages(Jwt jwt, Pageable pageable) {
+    public List<ImageDto> getImages(Jwt jwt, Pageable pageable) {
         AppUser user = userService.getUserFromJWT(jwt);
 
         List<Image> images = imageRepository.getAllByUser(user, pageable);
 
         return images.stream()
-                .map(ImageMapper::toImageDetailsRes)
+                .map(ImageMapper::toDto)
                 .toList();
     }
 
     public Image save(Image image) {
         return imageRepository.save(image);
+    }
+
+    public void delete(UUID imageID) {
+        imageRepository.deleteById(imageID);
     }
 
 }
