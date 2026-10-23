@@ -157,4 +157,11 @@ public class ImageStorageService {
         }
     }
 
+    public void deleteImage(String storagePath) {
+        var response = storageClient.delete()
+                .uri(storagePath)
+                .retrieve()
+                .body(String.class);
+        log.info(response);
+    }
 }
