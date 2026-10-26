@@ -1,9 +1,9 @@
 package com.example.image_processing_service.transform.dto;
 
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 public record Rotate(
-        @NotEmpty(message = "Degrees cannot be empty.")
+        @NotNull(message = "Degrees cannot be empty.")
         @ValidRotation
         Integer degrees) {
 }
