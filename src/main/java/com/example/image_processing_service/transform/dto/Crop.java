@@ -14,10 +14,10 @@ public record Crop(
         Integer height,
 
         @NotNull(message = "X coordinate cannot be empty")
-        @Min(value = 1, message = "Crop x coordinate cannot be negative.")
+        @Min(value = 0, message = "Crop x coordinate cannot be negative.")
         Integer x,
 
         @NotNull(message = "Y coordinate cannot be empty")
-        @Min(value = 1, message = "Crop x coordinate cannot be negative.")
+        @Min(value = 0, message = "Crop y coordinate cannot be negative.")
         Integer y) {
 }
