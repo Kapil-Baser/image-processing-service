@@ -2,6 +2,7 @@ package com.example.image_processing_service.image.controller;
 
 import com.example.image_processing_service.image.dto.ImageDetailsResponse;
 import com.example.image_processing_service.image.dto.ImageDto;
+import com.example.image_processing_service.image.service.ImageOrchestrator;
 import com.example.image_processing_service.image.service.ImageService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -13,17 +14,18 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
 
 
 @RestController
 @RequestMapping("/api/v1")
 public class ImageController {
-
-
     private final ImageService imageService;
+    private final ImageOrchestrator imageOrchestrator;
 
-    public ImageController(ImageService imageService) {
+    public ImageController(ImageService imageService, ImageOrchestrator imageOrchestrator) {
         this.imageService = imageService;
+        this.imageOrchestrator = imageOrchestrator;
     }
 
     @PostMapping( path = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -38,5 +40,11 @@ public class ImageController {
     public ResponseEntity<List<ImageDto>> getImages(Pageable pageable, @AuthenticationPrincipal Jwt jwt) {
         var images = imageService.getImages(jwt, pageable);
         return ResponseEntity.ok(images);
+    }
+
+    @DeleteMapping("/images/{id}")
+    public ResponseEntity<Void> deleteImage(@PathVariable("id") UUID imageID) {
+        imageOrchestrator.deleteImageAndCleanupStorage(imageID);
+        return ResponseEntity.noContent().build();
     }
 }
