@@ -18,7 +18,7 @@ This project involves creating a backend system for an image processing service 
 
 ## Features
 
-- Upload an Image to remove storage
-- Various transformations can be applied on an image
+- Upload an Image to cloud storage
+- Various transformations can be applied to an image
 - A User can list all the images they have stored
 - A user can delete an image
