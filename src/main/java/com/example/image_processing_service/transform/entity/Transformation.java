@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "transformations")
+@Table(name = "transformations",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"source_image_id", "transform_hash"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -32,6 +33,9 @@ public class Transformation {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "result_image_id")
     private Image resultImage;
+
+    @Column(name = "transform_hash", nullable = false)
+    private String transformHash;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
