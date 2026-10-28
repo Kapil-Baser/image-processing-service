@@ -10,7 +10,7 @@ This project involves creating a backend system for an image processing service 
 
 - Java 25
 - Spring Boot
-- Spring Security
+- Spring Security for authentication & authorization
 - Spring Security OAuth2 Server for JWT
 - Hibernate/JPA for database interaction
 - Flyway for database migration versioning
@@ -18,7 +18,35 @@ This project involves creating a backend system for an image processing service 
 
 ## Features
 
-- Upload an Image to cloud storage
-- Various transformations can be applied to an image
-- A User can list all the images they have stored
-- A user can delete an image
+- ### User Authentication
+
+    **Sign-Up**: Users can create an account.
+
+    **Log-In**: Users can use JWT to log into their account.
+
+    **JWT Authentication**: Secured endpoints using JWTs for authenticated access.
+
+- ### Image Management
+
+    **Upload Image**: Users can upload images.
+
+    **Transform Image**: Users can perform various transformations (resize, crop, rotate, filters etc.).
+
+    **Retrieve Image**: Users to retrieve a saved image in different formats.
+
+    **List Images**: List all uploaded images by the user with metadata.
+
+- ### Image Transformation
+
+  - Resize
+  -  Crop
+  -  Rotate
+  -  Flip
+
+    Mirror
+
+    Compress
+
+    Change format (JPEG, PNG, etc.)
+
+    Apply filters (grayscale, brightness, etc.)
