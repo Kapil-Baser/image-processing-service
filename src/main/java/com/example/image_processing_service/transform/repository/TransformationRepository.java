@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -27,4 +28,7 @@ public interface TransformationRepository extends JpaRepository<Transformation, 
     WHERE tr.source_image_id = :imageID
     """)
     List<UUID> getIDsOfAllTransformationsByImage(UUID imageID);
+
+    @NativeQuery("SELECT * FROM app.transformations AS tr WHERE tr.source_image_id = :sourceId AND tr.transform_hash = :transformHash")
+    Optional<Transformation> findBySourceImageAndTransformHash(UUID sourceId, String transformHash);
 }
