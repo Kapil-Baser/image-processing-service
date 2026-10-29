@@ -7,5 +7,7 @@ public record TransformRequest(@Valid Resize resize,
                                @ValidRotation Integer rotate,
                                Boolean flip,
                                Boolean mirror,
+                               @ValidFormat
+                               String format,
                                Filter filters) {
 }
