@@ -2,8 +2,12 @@ package com.example.image_processing_service.image.controller;
 
 import com.example.image_processing_service.image.dto.ImageDetailsResponse;
 import com.example.image_processing_service.image.dto.ImageDto;
+import com.example.image_processing_service.image.entity.Image;
+import com.example.image_processing_service.image.mapper.ImageMapper;
 import com.example.image_processing_service.image.service.ImageOrchestrator;
 import com.example.image_processing_service.image.service.ImageService;
+import com.example.image_processing_service.user.entity.AppUser;
+import com.example.image_processing_service.user.service.UserService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,29 +26,35 @@ import java.util.UUID;
 public class ImageController {
     private final ImageService imageService;
     private final ImageOrchestrator imageOrchestrator;
+    private final UserService userService;
 
-    public ImageController(ImageService imageService, ImageOrchestrator imageOrchestrator) {
+    public ImageController(ImageService imageService, ImageOrchestrator imageOrchestrator, UserService userService) {
         this.imageService = imageService;
         this.imageOrchestrator = imageOrchestrator;
+        this.userService = userService;
     }
 
     @PostMapping( path = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ImageDetailsResponse> uploadImage(@RequestParam("image") MultipartFile image, @AuthenticationPrincipal Jwt jwt) {
-        var response = imageService.uploadAndSave(jwt, image);
+        AppUser user = userService.getUserFromJWT(jwt);
+        Image saved = imageOrchestrator.upload(user, image);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(response);
+                .body(ImageMapper.toImageDetailsRes(saved));
     }
 
     @GetMapping("/images")
-    public ResponseEntity<List<ImageDto>> getImages(Pageable pageable, @AuthenticationPrincipal Jwt jwt) {
-        var images = imageService.getImages(jwt, pageable);
-        return ResponseEntity.ok(images);
+    public ResponseEntity<List<ImageDto>> getImages(Pageable pageable,
+                                                    @AuthenticationPrincipal Jwt jwt) {
+        AppUser user = userService.getUserFromJWT(jwt);
+        var images = imageService.getImages(user, pageable);
+        return ResponseEntity.ok(images.stream().map(ImageMapper::toDto).toList());
     }
 
     @DeleteMapping("/images/{id}")
-    public ResponseEntity<Void> deleteImage(@PathVariable("id") UUID imageID) {
-        imageOrchestrator.deleteImageAndCleanupStorage(imageID);
+    public ResponseEntity<Void> deleteImage(@PathVariable("id") UUID imageId, @AuthenticationPrincipal Jwt jwt) {
+        AppUser user = userService.getUserFromJWT(jwt);
+        imageOrchestrator.delete(user, imageId);
         return ResponseEntity.noContent().build();
     }
 }
