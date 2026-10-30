@@ -1,20 +1,25 @@
 package com.example.image_processing_service.transform.controller;
 
-import com.example.image_processing_service.image.dto.ImageDto;
+import com.example.image_processing_service.image.entity.Image;
 import com.example.image_processing_service.image.service.ImageOrchestrator;
 import com.example.image_processing_service.transform.dto.Crop;
 import com.example.image_processing_service.transform.dto.Filter;
 import com.example.image_processing_service.transform.dto.Resize;
 import com.example.image_processing_service.transform.dto.TransformRequest;
+import com.example.image_processing_service.user.entity.AppUser;
+import com.example.image_processing_service.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -28,6 +33,8 @@ class TransformationControllerTest {
 
     @MockitoBean
     private ImageOrchestrator imageOrchestrator;
+    @MockitoBean
+    private UserService userService;
 
     @Test
     void transformAuthenticatedRequest_returnsCreated() throws Exception {
@@ -44,20 +51,20 @@ class TransformationControllerTest {
         );
 
         ObjectMapper objectMapper = new ObjectMapper();
-
         UUID id = UUID.randomUUID();
-
-
-        ImageDto expectedResponse = ImageDto.builder()
+        AppUser user = new AppUser();
+        Image transformedImage = Image.builder()
                 .id(id)
+                .user(user)
                 .storagePath("http://supabase/storage/image.png")
-                .originalName("Image_1.jpg")
                 .mimeType("image/png")
-                .width(1200)
-                .height(800)
                 .build();
 
-        Mockito.when(imageOrchestrator.getOrCreateTransformation(imageId, transformRequest)).thenReturn(expectedResponse);
+
+        Mockito.when(userService.getUserFromJWT(any(Jwt.class))).thenReturn(user);
+
+        Mockito.when(imageOrchestrator.getOrCreateTransformation(user, imageId, transformRequest))
+                .thenReturn(transformedImage);
 
         mockMvc.perform(post("/api/v1/images/{id}/transform", imageId)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -66,5 +73,4 @@ class TransformationControllerTest {
                 .andExpect(jsonPath("$.id").value(id.toString()))
                 .andExpect(jsonPath("$.storagePath").value("http://supabase/storage/image.png"));
     }
-
 }
