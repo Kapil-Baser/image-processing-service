@@ -1,5 +1,6 @@
 package com.example.image_processing_service.image.service;
 
+import com.example.image_processing_service.image.dto.ImageUploadRequest;
 import com.example.image_processing_service.image.dto.ImageUploadResponse;
 import com.example.image_processing_service.image.exception.ImageDownloadFailedException;
 import com.example.image_processing_service.image.exception.ImageNotFoundException;
@@ -95,26 +96,28 @@ public class ImageStorageService {
         return response;
     }
 
-    public ImageUploadResponse uploadTransformation(UUID imageID, String username, BufferedImage transformedImage) {
+    public ImageUploadResponse uploadTransformation(ImageUploadRequest uploadRequest) {
 
         String storagePath;
         ImageUploadResponse response;
+        String username = uploadRequest.username();
+        String mime = "image/" + uploadRequest.format();
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            ImageIO.write(transformedImage, "png", baos);
+            ImageIO.write(uploadRequest.bufferedImage(), uploadRequest.format(), baos);
 
             byte[] bytes = baos.toByteArray();
 
             long contentLength = bytes.length;
 
-            String fileName = imageID + ".png";
+            String fileName = uploadRequest.imageId() + "." + uploadRequest.format();
 
 
             storageClient.post()
                     .uri("/object/{bucket}/{folder}/transform/{fileName}", bucket, username, fileName)
                     .body(bytes)
                     .contentLength(contentLength)
-                    .contentType(MediaType.IMAGE_PNG)
+                    .contentType(MediaType.parseMediaType(mime))
                     .retrieve()
                     .toBodilessEntity();
 
@@ -122,9 +125,9 @@ public class ImageStorageService {
 
             response = new ImageUploadResponse(storagePath,
                     contentLength,
-                    "image/png",
-                    transformedImage.getWidth(),
-                    transformedImage.getHeight());
+                    mime,
+                    uploadRequest.bufferedImage().getWidth(),
+                    uploadRequest.bufferedImage().getHeight());
 
         } catch (IOException e) {
             log.warn("Error while uploading transformed image: {}", e.getMessage());
