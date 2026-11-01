@@ -42,11 +42,6 @@ This project involves creating a backend system for an image processing service 
   -  Crop
   -  Rotate
   -  Flip
-
-    Mirror
-
-    Compress
-
-    Change format (JPEG, PNG, etc.)
-
-    Apply filters (grayscale, brightness, etc.)
+  - Mirror
+  - Change format (JPEG, PNG, WEBP)
+  - Apply filters (grayscale, brightness)
