@@ -1,0 +1,53 @@
+spring:
+  flyway:
+    enabled: true
+    default-schema: app
+
+
+  datasource:
+    url: ${DB_URL}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database:
+      platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl:
+        auto: validate
+    properties:
+      hibernate:
+        default_schema: app
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  data:
+    web:
+      pageable:
+        default-page-size: 5
+        max-page-size: 100
+
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          public-key-location: classpath:certs/public.pem
+
+rsa:
+  public-key: classpath:certs/public.pem
+  private-key: classpath:certs/private_key.pem
+
+logging:
+  level:
+    org.springframework.security: TRACE
+
+supabase:
+  s3:
+    endpoint: ${S3_ENDPOINT}
+    service-role-key: ${S3_SERVICE_ROLE_KEY}
+    region: ${S3_REGION}
+    bucket: ${S3_BUCKET_NAME}
+
