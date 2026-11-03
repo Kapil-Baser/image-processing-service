@@ -13,13 +13,13 @@ import com.example.image_processing_service.user.entity.AppUser;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 public class ImageOrchestrator {
@@ -84,26 +84,44 @@ public class ImageOrchestrator {
         }
     }
 
+    @Transactional
     public void delete(AppUser user, UUID imageId) {
         Image image = imageService.getOwnedImage(user, imageId);
 
         Cache cache = cacheManager.getCache("transformations");
-        if (cache != null) {
-            // If this is a resulting image of a transformation then removing it from cache
-            transformationRepository.findByResultImageId(imageId)
-                    .ifPresent(t -> cache.evict(t.getSourceImage().getId() + ":" + t.getTransformHash()));
-        }
 
-        List<Transformation> transformations = transformationRepository.findAllBySourceImageId(imageId);
+        // Find the transformations where this image is the source.
+        List<Transformation> asSource = transformationRepository.findAllBySourceImageId(imageId);
+        // Find the transformation that produced this image.
+        Optional<Transformation> asResult = transformationRepository.findByResultImageId(imageId);
 
-        List<String> paths = new ArrayList<>();
-        paths.add(image.getStoragePath());
-        transformations.forEach(t -> paths.add(t.getResultImage().getStoragePath()));
+        List<Transformation> toDelete = new ArrayList<>(asSource);
+        asResult.ifPresent(toDelete::add);
 
-        transformationRepository.deleteAll(transformations);
-        transformations.forEach(t -> imageService.delete(t.getResultImage()));
-        imageService.delete(image);
+        List<Image> imagesToDelete = new ArrayList<>();
+        imagesToDelete.add(image);
+        asSource.forEach(t -> imagesToDelete.add(t.getResultImage()));
 
-        paths.forEach(storageService::deleteImage);
+        List<String> paths = imagesToDelete.stream()
+                .map(Image::getStoragePath)
+                .toList();
+
+        List<String> cacheKeys = toDelete.stream()
+                .map(t -> t.getSourceImage().getId() + ":" + t.getTransformHash())
+                .toList();
+
+        transformationRepository.deleteAll(toDelete);
+        transformationRepository.flush();
+        imagesToDelete.forEach(imageService::delete);
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                if (cache != null) {
+                    cacheKeys.forEach(cache::evict);
+                    paths.forEach(storageService::deleteImage);
+                }
+            }
+        });
     }
 }
