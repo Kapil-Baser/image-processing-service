@@ -12,6 +12,10 @@ import java.util.UUID;
 @Repository
 public interface TransformationRepository extends JpaRepository<Transformation, UUID> {
     List<Transformation>  findAllBySourceImageId(UUID imageID);
+    Optional<Transformation> findByResultImageId(UUID imageID);
+
+    @NativeQuery("SELECT tr.source_image_id FROM app.transformations AS tr WHERE tr.result_image_id = :imageID")
+    UUID getSourceImageId(UUID imageID);
 
     @NativeQuery("""
     SELECT img.storage_path FROM app.images AS img
