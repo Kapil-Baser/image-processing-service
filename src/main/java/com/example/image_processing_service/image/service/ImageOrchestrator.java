@@ -10,6 +10,8 @@ import com.example.image_processing_service.transform.entity.Transformation;
 import com.example.image_processing_service.transform.repository.TransformationRepository;
 import com.example.image_processing_service.transform.service.TransformationService;
 import com.example.image_processing_service.user.entity.AppUser;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,12 +33,14 @@ public class ImageOrchestrator {
     private final TransformationService transformationService;
     private final ImageStorageService storageService;
     private final TransformationRepository transformationRepository;
+    private final CacheManager cacheManager;
 
-    public ImageOrchestrator(ImageService imageService, TransformationService transformationService, ImageStorageService storageService, TransformationRepository transformationRepository) {
+    public ImageOrchestrator(ImageService imageService, TransformationService transformationService, ImageStorageService storageService, TransformationRepository transformationRepository, CacheManager cacheManager) {
         this.imageService = imageService;
         this.transformationService = transformationService;
         this.storageService = storageService;
         this.transformationRepository = transformationRepository;
+        this.cacheManager = cacheManager;
     }
 
     public Image getOrCreateTransformation(AppUser user, UUID sourceId, TransformRequest req) {
@@ -82,6 +86,13 @@ public class ImageOrchestrator {
 
     public void delete(AppUser user, UUID imageId) {
         Image image = imageService.getOwnedImage(user, imageId);
+
+        Cache cache = cacheManager.getCache("transformations");
+        if (cache != null) {
+            // If this is a resulting image of a transformation then removing it from cache
+            transformationRepository.findByResultImageId(imageId)
+                    .ifPresent(t -> cache.evict(t.getSourceImage().getId() + ":" + t.getTransformHash()));
+        }
 
         List<Transformation> transformations = transformationRepository.findAllBySourceImageId(imageId);
 
