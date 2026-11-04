@@ -15,6 +15,7 @@ This project involves creating a backend system for an image processing service 
 - Hibernate/JPA for database interaction
 - Flyway for database migration versioning
 - Supabase for postgresql database and S3 bucket
+- Caffiene cache to optimize database read performance and redude API latency.
 
 ## Features
 
