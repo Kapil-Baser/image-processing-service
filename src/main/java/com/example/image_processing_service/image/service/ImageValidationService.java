@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 @Service
@@ -30,8 +31,8 @@ public class ImageValidationService {
         }
 
         // Verify magic bytes
-        try {
-            String mimeType = tika.detect(file.getInputStream());
+        try(InputStream in = file.getInputStream()) {
+            String mimeType = tika.detect(in);
             if (!ALLOWED_IMAGE_TYPES.contains(mimeType)) {
                 log.info("Invalid mime type: {}", mimeType);
                 return false;
