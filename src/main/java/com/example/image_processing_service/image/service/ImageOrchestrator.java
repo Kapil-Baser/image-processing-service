@@ -88,8 +88,6 @@ public class ImageOrchestrator {
     public void delete(AppUser user, UUID imageId) {
         Image image = imageService.getOwnedImage(user, imageId);
 
-        Cache cache = cacheManager.getCache("transformations");
-
         // Find the transformations where this image is the source.
         List<Transformation> asSource = transformationRepository.findAllBySourceImageId(imageId);
         // Find the transformation that produced this image.
@@ -117,6 +115,7 @@ public class ImageOrchestrator {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
+                Cache cache = cacheManager.getCache("transformations");
                 if (cache != null) {
                     cacheKeys.forEach(cache::evict);
                     paths.forEach(storageService::deleteImage);
