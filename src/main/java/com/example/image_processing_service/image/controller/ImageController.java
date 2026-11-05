@@ -9,6 +9,8 @@ import com.example.image_processing_service.image.service.ImageService;
 import com.example.image_processing_service.user.entity.AppUser;
 import com.example.image_processing_service.user.service.UserService;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -44,7 +46,7 @@ public class ImageController {
     }
 
     @GetMapping("/images")
-    public ResponseEntity<List<ImageDto>> getImages(Pageable pageable,
+    public ResponseEntity<List<ImageDto>> getImages(@PageableDefault(sort = {"createdAt", "id"}, direction = Sort.Direction.DESC) Pageable pageable,
                                                     @AuthenticationPrincipal Jwt jwt) {
         AppUser user = userService.getUserFromJWT(jwt);
         var images = imageService.getImages(user, pageable);
