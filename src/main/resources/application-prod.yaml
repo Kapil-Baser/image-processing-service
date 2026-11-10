@@ -29,12 +29,16 @@ spring:
         default-page-size: 5
         max-page-size: 100
 
-
   security:
     oauth2:
       resourceserver:
         jwt:
           public-key-location: classpath:certs/public.pem
+
+  cache:
+      cache-names: transformations
+      caffiene:
+        spec: maximumSize=100,expireAfterAccess=10m
 
 rsa:
   public-key: classpath:certs/public.pem
