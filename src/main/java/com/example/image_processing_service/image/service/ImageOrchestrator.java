@@ -1,6 +1,7 @@
 package com.example.image_processing_service.image.service;
 
 import com.example.image_processing_service.core.utils.Utils;
+import com.example.image_processing_service.image.dto.ImageCleanupEvent;
 import com.example.image_processing_service.image.dto.ImageUploadRequest;
 import com.example.image_processing_service.image.dto.ImageUploadResponse;
 import com.example.image_processing_service.image.entity.Image;
@@ -10,12 +11,9 @@ import com.example.image_processing_service.transform.entity.Transformation;
 import com.example.image_processing_service.transform.repository.TransformationRepository;
 import com.example.image_processing_service.transform.service.TransformationService;
 import com.example.image_processing_service.user.entity.AppUser;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.awt.image.BufferedImage;
@@ -33,14 +31,14 @@ public class ImageOrchestrator {
     private final TransformationService transformationService;
     private final ImageStorageService storageService;
     private final TransformationRepository transformationRepository;
-    private final CacheManager cacheManager;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public ImageOrchestrator(ImageService imageService, TransformationService transformationService, ImageStorageService storageService, TransformationRepository transformationRepository, CacheManager cacheManager) {
+    public ImageOrchestrator(ImageService imageService, TransformationService transformationService, ImageStorageService storageService, TransformationRepository transformationRepository, ApplicationEventPublisher eventPublisher) {
         this.imageService = imageService;
         this.transformationService = transformationService;
         this.storageService = storageService;
         this.transformationRepository = transformationRepository;
-        this.cacheManager = cacheManager;
+        this.eventPublisher = eventPublisher;
     }
 
     public Image getOrCreateTransformation(AppUser user, UUID sourceId, TransformRequest req) {
@@ -112,15 +110,6 @@ public class ImageOrchestrator {
         transformationRepository.flush();
         imagesToDelete.forEach(imageService::delete);
 
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                Cache cache = cacheManager.getCache("transformations");
-                if (cache != null) {
-                    cacheKeys.forEach(cache::evict);
-                    paths.forEach(storageService::deleteImage);
-                }
-            }
-        });
+        eventPublisher.publishEvent(new ImageCleanupEvent(cacheKeys, paths));
     }
 }
