@@ -35,3 +35,7 @@ build/
 ### Logs ###
 logs/
 *.log
+
+
+/src/main/resources/certs/
+/.env
