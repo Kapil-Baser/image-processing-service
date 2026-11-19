@@ -11,7 +11,7 @@ public class RestClientConfig {
     @Value("${supabase.s3.endpoint}")
     private String url;
 
-    @Value("${supabase.s3.service-role-key}")
+    @Value("${supabase.s3.secret-key}")
     private String key;
 
     @Bean
