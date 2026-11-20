@@ -51,7 +51,6 @@ logging:
 supabase:
   s3:
     endpoint: ${S3_ENDPOINT}
-    service-role-key: ${S3_SERVICE_ROLE_KEY}
-    region: ${S3_REGION}
+    secret-key: ${S3_SECRET_KEY}
     bucket: ${S3_BUCKET_NAME}
 
