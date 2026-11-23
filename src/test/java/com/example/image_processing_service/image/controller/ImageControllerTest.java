@@ -1,5 +1,6 @@
 package com.example.image_processing_service.image.controller;
 
+import com.example.image_processing_service.auth.security.SecurityConfig;
 import com.example.image_processing_service.image.entity.Image;
 import com.example.image_processing_service.image.service.ImageOrchestrator;
 import com.example.image_processing_service.image.service.ImageService;
@@ -8,6 +9,7 @@ import com.example.image_processing_service.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -16,11 +18,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
 @WebMvcTest(ImageController.class)
+@Import(SecurityConfig.class)
 class ImageControllerTest {
 
     @Autowired
@@ -63,6 +66,45 @@ class ImageControllerTest {
 
         verify(userService).getUserFromJWT(any(Jwt.class));
         verify(imageOrchestrator).upload(user, file);
+    }
+
+    @Test
+    void getImages_withoutToken_returnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/v1/images"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(userService, imageOrchestrator, service);
+    }
+
+    @Test
+    void uploadImage_withoutToken_returnsUnauthorized() throws Exception {
+        mockMvc.perform(multipart("/api/v1/images"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(userService, imageOrchestrator, service);
+    }
+
+    @Test
+    void deleteImage_withoutToken_returnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/v1/images/{}", "image-uuid"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(userService, imageOrchestrator, service);
+    }
+
+    @Test
+    void uploadImage_withWrongParam_returnsUnauthorized() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "not-image",
+                "fake image content".getBytes()
+        );
+
+        mockMvc.perform((multipart("/api/v1/images")
+                .file(file)
+                .with(jwt())))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(userService, imageOrchestrator, service);
     }
 
 }
