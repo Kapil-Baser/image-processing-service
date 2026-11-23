@@ -2,6 +2,7 @@ package com.example.image_processing_service.image.controller;
 
 import com.example.image_processing_service.auth.security.SecurityConfig;
 import com.example.image_processing_service.image.entity.Image;
+import com.example.image_processing_service.image.exception.ImageNotFoundException;
 import com.example.image_processing_service.image.service.ImageOrchestrator;
 import com.example.image_processing_service.image.service.ImageService;
 import com.example.image_processing_service.user.entity.AppUser;
@@ -15,6 +16,9 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.UUID;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -86,14 +90,14 @@ class ImageControllerTest {
 
     @Test
     void deleteImage_withoutToken_returnsUnauthorized() throws Exception {
-        mockMvc.perform(get("/api/v1/images/{}", "image-uuid"))
+        mockMvc.perform(delete("/api/v1/images/{}", "image-uuid"))
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(userService, imageOrchestrator, service);
     }
 
     @Test
-    void uploadImage_withWrongParam_returnsUnauthorized() throws Exception {
+    void uploadImage_withWrongParam_returnsBadRequest() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "not-image",
                 "fake image content".getBytes()
@@ -105,6 +109,50 @@ class ImageControllerTest {
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(userService, imageOrchestrator, service);
+    }
+
+    @Test
+    void uploadImage_withJsonBody_returnsUnsupportedMediaType() throws Exception {
+        String jsonPayload = """
+                {
+                    "name": "test-user",
+                    "email": "test-user@email.com"
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/images")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonPayload)
+                .with(jwt())).andExpect(status().isUnsupportedMediaType());
+
+        verifyNoInteractions(userService, imageOrchestrator, service);
+    }
+
+    @Test
+    void deleteImage_withWrongUUID_returnsBadRequest() throws Exception {
+
+        mockMvc.perform(delete("/api/v1/images/{id}", "not-a-uuid")
+                .with(jwt()))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(userService, imageOrchestrator, service);
+    }
+
+    @Test
+    void deleteImage_withValidUUID_returnsNoContent() throws Exception {
+        UUID uuid = UUID.randomUUID();
+        AppUser user = new AppUser();
+        user.setId(1L);
+        user.setUsername("test-user");
+
+        when(userService.getUserFromJWT(any(Jwt.class))).thenReturn(user);
+
+        mockMvc.perform(delete("/api/v1/images/{id}", uuid)
+                .with(jwt()))
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""));
+
+        verify(imageOrchestrator).delete(user, uuid);
     }
 
 }
