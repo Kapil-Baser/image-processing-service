@@ -12,8 +12,7 @@ spring:
     database:
       platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl:
-        auto: validate
+      ddl-auto: validate
     properties:
       hibernate:
         default_schema: app
@@ -37,16 +36,12 @@ spring:
 
   cache:
       cache-names: transformations
-      caffiene:
+      caffeine:
         spec: maximumSize=100,expireAfterAccess=10m
 
 rsa:
   public-key: classpath:certs/public.pem
   private-key: classpath:certs/private_key.pem
-
-logging:
-  level:
-    org.springframework.security: TRACE
 
 supabase:
   s3:
